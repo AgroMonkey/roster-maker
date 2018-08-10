@@ -1,0 +1,25 @@
+table span {
+    display: block;
+}
+
+.table-custom td, .table-custom th {
+    border: 1px #bbb solid;
+    max-width: 140px;
+    overflow: hidden;
+}
+
+.table-custom td:hover {
+    background-color: #eee;
+}
+
+/* remove border from top left cell */
+#top-left-cell {
+    border-top: none;
+    border-left: none;
+}
+
+#dateRangePicker {
+    max-width: 220px;
+    min-width: 220px;
+    background-color: #fff;
+}

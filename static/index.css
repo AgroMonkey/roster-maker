@@ -1,0 +1,22 @@
+#nextShift {
+    width: 240px;
+}
+
+#notificationBox {
+    width: 100%;
+    width: -webkit-calc(100% - 240px - 32px);
+    width: -moz-calc(100% - 240px - 32px);
+    width: calc(100% - 240px - 32px);
+    max-width: 800px;
+}
+
+@media (max-width: 640px) {
+    #notificationBox {
+        max-width: 100%;
+        width: 100%;
+    }
+    #nextShift {
+        width: 100%;
+    }
+}
+

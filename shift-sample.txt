@@ -1,0 +1,56 @@
+// Table creation
+CREATE TABLE 'shifts' ( 'shift_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 'date' DATETIME NOT NULL, 'start_time' TEXT NOT NULL, 'end_time' TEXT NOT NULL, 'break' TEXT, 'location' TEXT NOT NULL, 'user_id' INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id) )
+
+// David Shifts
+INSERT INTO "shifts" ("shift_id","date","start_time","end_time","break","location","user_id")
+VALUES (NULL,'2018-07-30','9am','1pm',NULL,'checkouts','1'),
+        (NULL,'2018-07-31','1pm','5pm',NULL,'checkouts','1'),
+        (NULL,'2018-08-03','9am','5pm','1hr','checkouts','1'),
+        (NULL,'2018-08-04','9am','1pm',NULL,'checkouts','1'),
+        (NULL,'2018-08-05','1pm','5pm',NULL,'checkouts','1');
+
+// Bruce shifts
+INSERT INTO "shifts" ("shift_id","date","start_time","end_time","break","location","user_id")
+VALUES (NULL,'2018-07-30','1pm','5pm',NULL,'checkouts','2'),
+        (NULL,'2018-07-31','9am','1pm',NULL,'checkouts','2'),
+        (NULL,'2018-08-03','10am','2pm',NULL,'service','2'),
+        (NULL,'2018-08-04','1pm','5pm',NULL,'checkouts','2'),
+        (NULL,'2018-08-05','9am','1pm',NULL,'checkouts','2');
+
+// Linda shifts
+INSERT INTO "shifts" ("shift_id","date","start_time","end_time","break","location","user_id")
+VALUES (NULL,'2018-07-30','10am','2pm',NULL,'service','3'),
+        (NULL,'2018-07-31','10am','2pm',NULL,'service','3'),
+        (NULL,'2018-08-02','10am','2pm',NULL,'service','3'),
+        (NULL,'2018-08-04','10am','2pm',NULL,'service','3'),
+        (NULL,'2018-08-05','10am','2pm',NULL,'service','3');
+
+// Jason shifts
+INSERT INTO "shifts" ("shift_id","date","start_time","end_time","break","location","user_id")
+VALUES (NULL,'2018-08-01','9am','5pm','1hr','checkouts','4'),
+        (NULL,'2018-08-02','9am','5pm','1hr','checkouts','4'),
+        (NULL,'2018-08-04','9am','5pm','1hr','checkouts','4');
+
+// Rochelle shifts
+INSERT INTO "shifts" ("shift_id","date","start_time","end_time","break","location","user_id")
+VALUES (NULL,'2018-07-31','9am','5pm','1hr','supervisor','5'),
+        (NULL,'2018-08-01','10am','2pm',NULL,'service','5'),
+        (NULL,'2018-08-02','9am','5pm','1hr','supervisor','5'),
+        (NULL,'2018-08-04','9am','5pm','1hr','supervisor','5');
+
+// Jester shifts
+INSERT INTO "shifts" ("shift_id","date","start_time","end_time","break","location","user_id")
+VALUES (NULL,'2018-07-30','9am','5pm','1hr','supervisor','6'),
+        (NULL,'2018-08-01','9am','5pm','1hr','supervisor','6'),
+        (NULL,'2018-08-03','9am','5pm','1hr','supervisor','6'),
+        (NULL,'2018-08-05','9am','5pm','1hr','supervisor','6');
+
+
+// Queries
+SELECT shifts.*, users.real_name FROM 'shifts' JOIN 'users' ON shifts.user_id = users.id
+// date range
+SELECT shifts.*, users.real_name FROM 'shifts' JOIN 'users' ON shifts.user_id = users.id WHERE (date BETWEEN '2018-07-01' AND '2018-08-03')
+// Reset auto-increment number
+UPDATE sqlite_sequence SET seq = 10 WHERE name = 'shifts';
+UPDATE sqlite_sequence SET seq = 6 WHERE name = 'users';
+

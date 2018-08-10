@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Add New User
+{% endblock %}
+
+{% block main %}
+    <form action="/adduser" method="post">
+        <div class="form-group row">
+            <label class="col-md-4 col-form-label" for="username">Username</label>
+            <input autocomplete="off" autofocus class="col-md-4 form-control" name="username" type="text"/>
+        </div>
+        <div class="form-group row">
+            <label class="col-md-4 col-form-label" for="password">Password</label>
+            <input class="col-md-4 form-control inputPass" name="password" type="password"/>
+        </div>
+        <div class="form-group row">
+            <label class="col-md-4 col-form-label" for="confirmation">Confirm Password</label>
+            <input class="col-md-4 form-control inputPass" name="confirmation" type="password"/>
+        </div>
+        <div class="form-group row">
+            <label class="col-md-4 col-form-label" for="email">Email</label>
+            <input class="col-md-4 form-control" name="email" type="text"/>
+        </div>
+        <div class="form-group row">
+            <label class="col-md-4 col-form-label" for="real_name">Real Name</label>
+            <input class="col-md-4 form-control" name="real_name" type="text"/>
+        </div>
+        <div class="form-group row">
+            <label class="col-md-4 col-form-label" for="role">Role</label>
+            <select id="role" name="role" class="col-md-4 form-control">
+                <option value="employee">Employee</option>
+                <option value="manager">Manager</option>
+                <option value="admin">Admin</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" type="submit">Add New User</button>
+    </form>
+{% endblock %}

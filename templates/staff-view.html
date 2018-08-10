@@ -1,0 +1,38 @@
+<div class="table-responsive mx-auto" style="max-width: calc(140px * {{ dates|length }} + 100px)">
+    <table class="table table-custom text-center">
+        <thead>
+        	<tr>
+        	    <th id="top-left-cell"></th>
+        	    {% for date in dates %}
+        		    <th scope="col"><span>{{ date["day"] }}</span><span>{{ date["datePretty"] }}</span></th>
+        		{% endfor %}
+        	</tr>
+        </thead>
+        <tbody>
+                {% for user in users %}
+                <tr>
+                    <th class="align-middle" scope="row">
+                        <span>{{ user["real_name"] }}</span>
+                    </th>
+                    {% for date in dates %}
+                        <td data-user="{{ user['id'] }}" data-date="{{ date['dateISO'] }}">
+                            {% for shift in shifts %}
+                                {% if (shift['date'] == date['dateISO']) and (shift['user_id'] == user['id']) %}
+                                    <div class="shift" data-shift_id="{{ shift['shift_id'] }}">
+                                        <span data-location="{{ shift['location']|title }}">{{ shift['location']|title }}</span>
+                                        <span data-start_time="{{ shift['start_time'] }}" data-end_time="{{ shift['end_time'] }}">
+                                            {{ shift['start_time'] }}-{{ shift['end_time'] }}
+                                        </span>
+                                        {% if shift['break'] %}
+                                            <span data-break="{{ shift['break'] }}">{{ shift['break'] }} break</span>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+        </tbody>
+    </table>
+</div>

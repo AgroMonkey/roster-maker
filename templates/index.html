@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Welcome
+{% endblock %}
+
+{% block scripts %}
+    <link rel="stylesheet" href="/static/index.css"/>
+{% endblock %}
+
+{% block main %}
+    <h2>Welcome {{ session.user_real_name }}</h2>
+    <div class="d-flex flex-wrap justify-content-center">
+        <div class="card m-2" id="nextShift">
+            <h3 class="card-header px-2">Your Next Shift:</h3>
+            <div class="card-body">
+                {% if shift %}
+                    <h4 class="card-title m-0">{{ shift["day"] }}</h4>
+                    <h5 class="card-title">{{ shift["datePretty"] }}</h5>
+                    <h6 class="card-text mb-1">{{ shift["location"]|title }}</h6>
+                    <p class="card-text mb-0">{{ shift["start_time"] }} - {{ shift["end_time"] }}</p>
+                    {% if shift['break'] %}
+                        <p class="card-text">{{ shift["break"] }} break</p>
+                    {% endif %}
+                    <a href="/roster" class="btn btn-primary">View Roster</a>
+                {% else %}
+                    <p class="card-text">You have no rostered shifts.</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card m-2" id="notificationBox">
+            <h3 class="card-header">Notifications:</h3>
+            <div class="card-body text-left">
+                <ul class="generic-list">
+                    <li class="item">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Tempora, iusto!</li>
+                    <li class="item">Voluptates odio inventore culpa mollitia dolorem suscipit possimus fuga, cum!</li>
+                    <li class="item">Ratione aut rerum rem laboriosam distinctio, odit aliquam iure modi.</li>
+                    <li class="item">Quas voluptatibus maiores dolorem corrupti, quaerat sapiente suscipit iusto repellent.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}

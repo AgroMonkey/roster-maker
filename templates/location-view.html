@@ -1,0 +1,44 @@
+<div class="table-responsive mx-auto" style="max-width: calc(140px * {{ dates|length }} + 100px)">
+    <table class="table table-custom text-center">
+        <thead>
+        	<tr>
+        	    <th id="top-left-cell"></th>
+        	    {% for date in dates %}
+        		    <th scope="col"><span>{{ date["day"] }}</span><span>{{ date["datePretty"] }}</span></th>
+        		{% endfor %}
+        	</tr>
+        </thead>
+        <tbody>
+                {% for location in locations %}
+                <tr>
+                    <th class="align-middle" scope="row">
+                        <span>{{ location["location"]|title }}</span>
+                    </th>
+                    {% for date in dates %}
+                        <td data-slocation="{{ location['location']|title }}" data-date="{{ date['dateISO'] }}">
+                            {% set count = [0] %}
+                            {% for shift in shifts %}
+                                {% if (shift['date'] == date['dateISO']) and (shift['location'] == location['location']) %}
+                                    {% if count.append(count.pop() + 1) %}{% endif %} {# increment count by 1 #}
+                                    {% if (count[0] > 1) %}
+                                        <span class="shift-seperator">-------</span>
+                                    {% endif %}
+                                    <div class="shift" data-shift_id="{{ shift['shift_id'] }}">
+                                        <span data-user="{{ shift['user_id'] }}">{{ shift['real_name']|title }}</span>
+                                        <span data-start_time="{{ shift['start_time'] }}" data-end_time="{{ shift['end_time'] }}">
+                                            {{ shift['start_time'] }}-{{ shift['end_time'] }}
+                                        </span>
+                                        {% if shift['break'] %}
+                                            <span data-break="{{ shift['break'] }}">{{ shift['break'] }} break</span>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+
+                            {% endfor %}
+                        </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+
+{% block scripts %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="/static/edit-script.js"></script>
+{% endblock %}
+
+{% block title %}
+    Edit User
+{% endblock %}
+
+{% block main %}
+    <h3>Editing User ID: {{ user["id"] }}</h3>
+    <br>
+    <div class="container">
+        <form action="/edituser" method="post">
+            <input name="id" type="number" value="{{ user["id"] }}" hidden>
+            <div class="form-group row">
+                <label class="col-md-4 col-form-label" for="username">Username</label>
+                <input autocomplete="off" autofocus class="col-md-4 form-control" name="username" type="text" value="{{ user["username"] }}"/>
+            </div>
+            <div class="form-group row">
+                <label class="col-md-4 col-form-label" for="email">Email</label>
+                <input class="col-md-4 form-control" name="email" type="text" value="{{ user["email"] }}"/>
+            </div>
+            <div class="form-group row">
+                <label class="col-md-4 col-form-label" for="real_name">Real Name</label>
+                <input class="col-md-4 form-control" name="real_name" type="text" value="{{ user["real_name"] }}"/>
+            </div>
+            <div class="form-group row">
+                <label class="col-md-4 col-form-label" for="role">Role</label>
+                <select id="role" name="role" class="col-md-4 form-control">
+                    <option value="employee" {% if user["role"]=="employee" %} selected="selected"{% endif %}>Employee</option>
+                    <option value="manager" {%  if user["role"]=="manager" %} selected="selected"{% endif %}>Manager</option>
+                    <option value="admin" {% if user["role"]=="admin" %} selected="selected"{% endif %}>Admin</option>
+                </select>
+            </div>
+
+            <div class="form-group row">
+                <div class="mx-auto">
+                    <input type="checkbox" class="form-check-input" name="changePass" id="changePass">
+                    <label class="form-check-label" for="changePass">Change Password</label>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-md-4 col-form-label" for="password">Password</label>
+                <input class="col-md-4 form-control inputPass" name="password" type="password" disabled/>
+            </div>
+            <div class="form-group row">
+                <label class="col-md-4 col-form-label" for="confirmation">Confirm Password</label>
+                <input class="col-md-4 form-control inputPass" name="confirmation" type="password" disabled/>
+            </div>
+
+            <button class="btn btn-primary" type="submit">Save Changes</button>
+        </form>
+    </div>
+{% endblock %}
