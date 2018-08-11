@@ -58,4 +58,3 @@ def manager_required(f):
             return redirect("/")
         return f(*args, **kwargs)
     return decorated_function
-

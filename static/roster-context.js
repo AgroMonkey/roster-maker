@@ -11,11 +11,20 @@ var sbreak = null;
 $(function() {
     start_date = new Date($('#startDate').val());
     end_date = new Date($('#endDate').val());
+    itemsDisabled = {}
+    itemsDisabled["delete"] = true;
+    itemsDisabled["edit"] = true;
     $.contextMenu({
         selector: 'td',
         callback: function(key, options) {
             var m = "clicked: " + key + "\nDate: " + date + " User: " + user;
             window.console && console.log(m);
+        },
+        events: {
+            hide : function(options){
+                itemsDisabled["delete"] = true;
+                itemsDisabled["edit"] = true;
+            }
         },
         items: {
             "add": {
@@ -40,6 +49,9 @@ $(function() {
                 icon: "edit",
                 callback: function(key, options) {
                     $('#modalEditForm').modal();
+                },
+                disabled: function(key, opt) {
+                    return !!itemsDisabled[key];
                 }
             },
             "delete": {
@@ -51,6 +63,9 @@ $(function() {
                     /*global request*/
                     request("/deleteshift", {shift_id: shift_id}, "post");
                     /*$('.shift[data-shift_id=' + shift_id + ']').remove()*/
+                },
+                disabled: function(key, opt) {
+                    return !!itemsDisabled[key];
                 }
             }
         }
@@ -65,7 +80,10 @@ $(function() {
             user = this.dataset.user;
         }
     });
+
     $('.shift').contextmenu(function (e) {
+        itemsDisabled["delete"] = false;
+        itemsDisabled["edit"] = false;
         shift_id = this.dataset.shift_id;
         if (window.location.pathname == "/locations") {
             user = $(this).find('[data-user]').data('user');

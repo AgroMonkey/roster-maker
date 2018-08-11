@@ -1,4 +1,5 @@
 // Table creation
+CREATE TABLE 'users' ('id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 'username' TEXT NOT NULL UNIQUE, 'email' TEXT NOT NULL UNIQUE, 'pass' TEXT NOT NULL, 'real_name' TEXT NOT NULL, 'role' TEXT NOT NULL)
 CREATE TABLE 'shifts' ( 'shift_id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 'date' DATETIME NOT NULL, 'start_time' TEXT NOT NULL, 'end_time' TEXT NOT NULL, 'break' TEXT, 'location' TEXT NOT NULL, 'user_id' INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id) )
 
 // David Shifts

@@ -21,7 +21,11 @@
 {% endblock %}
 
 {% block title %}
-    Roster
+    {% if request.path == "/roster" %}
+        Roster
+    {% elif request.path == "/locations" %}
+        Locations
+    {% endif %}
 {% endblock %}
 
 {% block main %}
@@ -40,7 +44,7 @@
                             <input class="form-control" name="shift_id" type="text" value="" hidden/>
                             <div class="md-form mb-2">
                                 <label class="col-form-label pt-0" for="user_id">Name</label>
-                                <select id="selectRealName" name="user_id" class="form-control">
+                                <select id="selectRealName" name="user_id" class="form-control" required>
                                     <option disabled selected hidden> -- select an option -- </option>
                                     {% for user in users %}
                                         <option value="{{ user['id'] }}">{{ user["real_name"] }}</option>
@@ -49,29 +53,33 @@
                             </div>
                             <div class="md-form mb-2">
                                 <label class="col-form-label" for="date">Date</label>
-                                <input class="form-control" name="date" type="date" value=""/>
+                                <input class="form-control" name="date" type="date" value="" required/>
                             </div>
                             <div class="md-form mb-2">
                                 <label class="col-form-label" for="location">Location</label>
-                                <input class="form-control" name="location" type="text" value=""/>
+                                <input class="form-control" list="locations" name="location" required/>
+                                <datalist id="locations">
+                                    {% for location in locations %}
+                                        <option value="{{ location['location'] }}">
+                                    {% endfor %}
+                                </datalist>
                             </div>
                             <div class="md-form mb-2">
                                 <label class="col-form-label" for="start_time">Start Time</label>
-                                <input class="form-control" name="start_time" type="time" value=""/>
+                                <input class="form-control" name="start_time" type="time" value="" required/>
                             </div>
                             <div class="md-form mb-2">
                                 <label class="col-form-label" for="end_time">End Time</label>
-                                <input class="form-control" name="end_time" type="time" value=""/>
+                                <input class="form-control" name="end_time" type="time" value="" required/>
                             </div>
                             <div class="md-form mb-2">
                                 <label class="col-form-label" for="break">Break</label>
-                                <select id="selectBreak" name="break" class="form-control">
+                                <select id="selectBreak" name="break" class="form-control" required>
                                     <option value="None">None</option>
                                     <option value="30min">30min</option>
                                     <option value="1hr">1hr</option>
                                 </select>
                             </div>
-
                         </div>
                         <div class="modal-footer d-flex justify-content-center">
                             <button class="btn btn-primary" type="submit">Save</button>
@@ -84,15 +92,26 @@
         </div>
     {% endif %}
     <div class="container">
-        <form id="dateRangeForm" action="/roster" method="get">
-            <div class="form-group row">
-                <label class="col-form-label m-1 ml-auto" for="dateRange">Range:</label>
-                <input id="dateRangePicker" readonly="true" class="col-sm-3 form-control m-1 mr-auto" type="text" name="date_range">
+        {% if request.path == "/roster" %}
+            <form id="dateRangeForm" method="get" action="/roster">
+        {% elif request.path == "/locations" %}
+            <form id="dateRangeForm" method="get" action="/locations">
+        {% endif %}
+            <div class="form-group row mb-1">
+                <label id="rangeLabel" class="col-form-label m-1 ml-auto" for="dateRange">Range:</label>
+                <button id="prevRange" class="btn btn-light btn-custom m-1" type="button">&laquo;</button>
+                <input id="dateRangePicker" readonly="true" class="col-sm-3 form-control m-1" type="text" name="date_range">
                 <input id="startDate" name="start_date" value="{{ dates[0]['dateISO'] }}" hidden>
                 <input id="endDate" name="end_date"value="{{ dates[-1]['dateISO'] }}" hidden>
+                <button id="nextRange" class="btn btn-light btn-custom m-1 mr-auto" type="button">&raquo;</button>
             </div>
         </form>
     </div>
+    {% if (session.user_role == "admin" or session.user_role == "manager") %}
+        <div class="helptext">
+            <p>Open menu: right-click (PC), control-click (Mac), long press (phone/tablet)<p>
+        </div>
+    {% endif %}
 
     {% if request.path == "/roster" %}
         {% include 'staff-view.html' %}

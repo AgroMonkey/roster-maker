@@ -1,9 +1,13 @@
 {% extends "layout.html" %}
 
 {% block scripts %}
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.0/jquery.contextMenu.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.0/jquery.ui.position.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.0/jquery.contextMenu.min.css"/>
+
+    <link rel="stylesheet" href="/static/users.css"/>
     <script src="/static/request.js"></script>
-    <script src="/static/users-script.js"></script>
+    <script src="/static/users.js"></script>
 {% endblock %}
 
 {% block title %}
@@ -11,11 +15,64 @@
 {% endblock %}
 
 {% block main %}
+    <div class="modal" id="modalEditForm" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header text-center">
+                    <h4 class="modal-title w-100 font-weight-bold">Add/Edit User</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="/updateuser" id="modalForm" method="post">
+                    <div class="modal-body mx-3">
+                        <input name="user_id" type="number" hidden>
+                        <div class="md-form mb-2">
+                            <label class="col-form-label" for="username">Username</label>
+                            <input autocomplete="off" autofocus class="form-control" name="username" type="text" required/>
+                        </div>
+                        <div class="md-form mb-2">
+                            <label class="col-form-label" for="email">Email</label>
+                            <input class="form-control" name="email" type="email" required/>
+                        </div>
+                        <div class="md-form mb-2">
+                            <label class="col-form-label" for="real_name">Real Name</label>
+                            <input class="form-control" name="real_name" type="text" required/>
+                        </div>
+                        <div class="md-form mb-2">
+                            <label class="col-form-label" for="role">Role</label>
+                            <select id="role" name="role" class="form-control">
+                                <option value="employee">Employee</option>
+                                <option value="manager">Manager</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="md-form mx-auto py-2" id="changePassRow">
+                            <input type="checkbox" class="form-check-input" name="changePass" id="changePass">
+                            <label class="form-check-label" for="changePass">Change Password</label>
+                        </div>
+                        <div class="md-form mb-2">
+                            <label class="col-form-label" for="password">Password</label>
+                            <input class="form-control inputPass" name="password" type="password" disabled/>
+                        </div>
+                        <div class="md-form mb-2">
+                            <label class="col-form-label" for="confirmation">Confirm Password</label>
+                            <input class="form-control inputPass" name="confirmation" type="password" disabled/>
+                        </div>
+                    </div>
+                    <div class="modal-footer d-flex justify-content-center">
+                        <button class="btn btn-primary" type="submit">Save</button>
+                        <button class="btn btn-secondary" type="reset">Reset</button>
+                        <button class="btn btn-danger" data-dismiss="modal" type="button">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <div class="container">
-        <div class="container my-2 text-left">
-            <a class="btn btn-primary mx-1" href="/adduser" role="button">Add User</button></a>
+        <div class="container mb-3 text-left">
+            <button id="btnAdd" type="button" class="btn btn-primary mx-1">Add User</button>
             <button id="btnEdit" type="button" class="btn btn-secondary mx-1">Edit</button>
-            <!--<button id="btnReset" type="button" class="btn btn-secondary mx-1">Reset Password</button>-->
             <button id="btnDelete" type="button" class="btn btn-danger mx-1">Delete</button>
         </div>
 
@@ -31,16 +88,21 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for row in rows %}
-                        <tr class="user_row">
+                    {% for user in users %}
+                        <tr class="user_row"
+                            data-user_id="{{ user['id'] }}"
+                            data-username="{{ user['username'] }}"
+                            data-email="{{ user['email'] }}"
+                            data-real_name="{{ user['real_name'] }}"
+                            data-role="{{ user['role'] }}">
                             <td class="userIdCol">
-                                <input class="userIdRadio" type="radio" name="select" value="{{ row["id"] }}">
-                                <label for="select">{{ row["id"] }}</label>
+                                <input class="userIdRadio" type="radio" name="select" value="{{ user["id"] }}">
+                                <label class="userIdLabel" for="select">{{ user["id"] }}</label>
                             </td>
-                            <td>{{ row["username"] }}</td>
-                            <td>{{ row["email"] }}</td>
-                            <td>{{ row["real_name"] }}</td>
-                            <td>{{ row["role"] }}</td>
+                            <td>{{ user["username"] }}</td>
+                            <td>{{ user["email"] }}</td>
+                            <td>{{ user["real_name"] }}</td>
+                            <td>{{ user["role"] }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>

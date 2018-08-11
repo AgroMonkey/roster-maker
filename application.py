@@ -77,13 +77,10 @@ def roster():
         dates[x]["datePretty"] = date.strftime("%d/%m/%Y")
         dates[x]["day"] = date.strftime("%A")
 
-    users = db.execute("SELECT id, real_name FROM 'users'")
+    users = db.execute("SELECT id, real_name FROM 'users' ORDER BY real_name")
     shifts = db.execute("SELECT shifts.*, users.real_name FROM 'shifts' JOIN 'users' ON shifts.user_id = users.id WHERE (date BETWEEN :s AND :e) ORDER BY start_time",
                         s=start.strftime("%Y-%m-%d"), e=end.strftime("%Y-%m-%d"))
-    if request.path == "/locations":
-        locations = db.execute("SELECT location FROM 'shifts' GROUP BY location")
-    else:
-        locations = None
+    locations = db.execute("SELECT location FROM 'shifts' GROUP BY location")
 
     return render_template("roster.html", dates=dates, users=users, shifts=shifts, locations=locations)
 
@@ -91,6 +88,7 @@ def roster():
 @app.route("/deleteshift", methods=["POST"])
 @manager_required
 def deleteshift():
+    """Delete shift from roster"""
     shift_id = request.form.get("shift_id")
     print("Deleted Shift ID: " + shift_id)
     result = db.execute("DELETE FROM shifts WHERE shift_id = :s", s=shift_id)
@@ -104,6 +102,7 @@ def deleteshift():
 @app.route("/updateroster", methods=["POST"])
 @manager_required
 def updateroster():
+    """Update/Add shifts in roster"""
     print("Update Roster")
     if not request.form.get("user_id"):
         return apology("must provide user_id")
@@ -128,22 +127,19 @@ def updateroster():
         sbreak = request.form.get("break")
     if (request.form.get("shift_id")):
         shift_id = request.form.get("shift_id")
-        print("Edit Shift: " + shift_id)
         result = db.execute("UPDATE shifts SET user_id= :u, date= :d, location= :l, start_time= :st, end_time= :e, break= :b WHERE shift_id = :si",
                             u=user_id, d=date, l=location, st=start_time, e=end_time, b=sbreak, si=shift_id)
         if result:
-            return redirect("/")
+            return redirect(request.referrer)
         else:
             return apology("Shift Edit Failed")
     else:
-        print("Add Shift")
         result = db.execute("INSERT INTO 'shifts' ('user_id', 'date', 'location', 'start_time', 'end_time', 'break') VALUES (:u, :d, :l, :st, :e, :b)",
                             u=user_id, d=date, l=location, st=start_time, e=end_time, b=sbreak)
         if result:
-            return redirect("/")
+            return redirect(request.referrer)
         else:
             return apology("Add Shift Failed")
-    return ("", 204)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -197,55 +193,61 @@ def logout():
     return redirect("/")
 
 
-@app.route("/adduser", methods=["GET", "POST"])
+@app.route("/updateuser", methods=["POST"])
 @admin_required
-def adduser():
-    """Add new user"""
+def updateuser():
+    """Add/Edit user"""
 
-    # User reached route via POST (as by submitting a form via POST)
-    if request.method == "POST":
+    # Ensure all fields were submitted
+    if not request.form.get("username"):
+        return apology("must provide username")
+    elif not request.form.get("email"):
+        return apology("must provide email")
+    elif not request.form.get("real_name"):
+        return apology("must provide real name")
+    elif not request.form.get("role"):
+        return apology("must provide role")
 
-        # Ensure all fields were submitted
-        if not request.form.get("username"):
-            return apology("must provide username")
-
-        elif not request.form.get("password"):
+    # check if changing password or adding new user
+    if request.form.get("changePass"):
+        if not request.form.get("password"):
             return apology("must provide password")
-
         elif not request.form.get("confirmation"):
             return apology("must provide confirmation")
-
-        elif not request.form.get("email"):
-            return apology("must provide email")
-
-        elif not request.form.get("real_name"):
-            return apology("must provide real name")
-
-        elif not request.form.get("role"):
-            return apology("must provide role")
-
         elif not (request.form.get("password") == request.form.get("confirmation")):
             return apology("Password and confirmation don't match")
-
-        user = request.form.get("username")
         pwd = generate_password_hash(request.form.get("password"))
-        email = request.form.get("email")
-        real_name = request.form.get("real_name")
-        role = request.form.get("role")
 
-        result = db.execute("INSERT INTO 'users' ('username', 'pass', 'email', 'real_name', 'role') VALUES (:u, :p, :e, :n, :r)",
-                            u=user, p=pwd, e=email, n=real_name, r=role)
+    user = request.form.get("username")
+    email = request.form.get("email")
+    name = request.form.get("real_name")
+    role = request.form.get("role")
 
+    if request.form.get("user_id"):
+        user_id = request.form.get("user_id")
+        # Editing existing user
+        result = db.execute("UPDATE users SET username= :u, email= :e, real_name= :n, role= :r WHERE id = :i",
+                            u=user, e=email, n=name, r=role, i=user_id)
         if not result:
+            return apology("Could not edit user")
+        if request.form.get("changePass"):
+            # If password changing
+            result2 = db.execute("UPDATE users SET pass= :p WHERE id = :i", p=pwd, i=user_id)
+            if not result2:
+                return apology("Could not change pass")
+        flash('User succesfully modified')
+        return redirect("/users")
+    else:
+        if not pwd:
+            return apology("Missing password info")
+        # Adding new user
+        result3 = db.execute("INSERT INTO 'users' ('username', 'pass', 'email', 'real_name', 'role') VALUES (:u, :p, :e, :n, :r)",
+                             u=user, p=pwd, e=email, n=name, r=role)
+        if not result3:
             return apology("Could not create user")
         else:
-            # Redirect user to home page
             flash('User succesfully registered')
             return redirect("/users")
-
-    # User reached route via GET (as by clicking a link or via redirect)
-    else:
-        return render_template("adduser.html")
 
 
 @app.route("/changepass", methods=["GET", "POST"])
@@ -259,23 +261,20 @@ def changepass():
         # Ensure old password was submitted
         if not request.form.get("oldpass"):
             return apology("must provide old pass")
-
         # Ensure password was submitted
         elif not request.form.get("password"):
             return apology("must provide new pass")
-
         elif not request.form.get("confirmation"):
             return apology("must provide confirmation")
-
+        # Ensure passwords match
         elif not (request.form.get("password") == request.form.get("confirmation")):
             return apology("Password and confirmation don't match")
-
+        # Check if old password matches
         rows = db.execute("SELECT * FROM users WHERE id = :i", i=session["user_id"])
         if not check_password_hash(rows[0]["pass"], request.form.get("oldpass")):
             return apology("Old password doesn't match")
 
         pwd = generate_password_hash(request.form.get("password"))
-
         result = db.execute("UPDATE users SET pass= :p WHERE id = :i", p=pwd, i=session["user_id"])
 
         if not result:
@@ -294,63 +293,8 @@ def changepass():
 @admin_required
 def users():
     """Show list of users"""
-    rows = db.execute("SELECT * FROM 'users'")
-    return render_template("users.html", rows=rows)
-
-
-@app.route("/edituser",  methods=["GET", "POST"])
-@admin_required
-def edit_user():
-    """Edit user details"""
-    if request.method == "POST":
-        # Ensure all fields submitted
-        if not request.form.get("id"):
-            return apology("must provide id")
-        if not request.form.get("username"):
-            return apology("must provide username")
-        elif not request.form.get("email"):
-            return apology("must provide email")
-        elif not request.form.get("real_name"):
-            return apology("must provide real name")
-        elif not request.form.get("role"):
-            return apology("must provide role")
-
-        user_id = request.form.get("id")
-
-        # check if changing password
-        if request.form.get("changePass"):
-            if not request.form.get("password"):
-                return apology("must provide password")
-
-            elif not request.form.get("confirmation"):
-                return apology("must provide confirmation")
-
-            elif not (request.form.get("password") == request.form.get("confirmation")):
-                return apology("Password and confirmation don't match")
-
-            pwd = generate_password_hash(request.form.get("password"))
-            result2 = db.execute("UPDATE users SET pass= :p WHERE id = :i", p=pwd, i=user_id)
-            if not result2:
-                return apology("Could not change pass")
-
-        user = request.form.get("username")
-        email = request.form.get("email")
-        name = request.form.get("real_name")
-        role = request.form.get("role")
-
-        result = db.execute("UPDATE users SET username= :u, email= :e, real_name= :n, role= :r WHERE id = :i",
-                            u=user, e=email, n=name, r=role, i=user_id)
-
-        if not result:
-            return apology("Could not edit details")
-        else:
-            # Redirect user to home page
-            flash('Details succesfully changed')
-            return redirect("/users")
-    else:
-        user_id = request.args.get("id")
-        user = db.execute("SELECT * FROM 'users' WHERE id = :i", i=user_id)
-        return render_template("edituser.html", user=user[0])
+    users = db.execute("SELECT * FROM 'users'")
+    return render_template("users.html", users=users)
 
 
 @app.route("/deleteuser",  methods=["POST"])
@@ -365,24 +309,6 @@ def delete_user():
         return apology("Could not delete user")
     else:
         flash('User succesfully deleted')
-        return redirect("/users")
-
-
-@app.route("/resetuser",  methods=["POST"])
-@admin_required
-def reset_user():
-    """Reset password of user"""
-    if not request.form.get("id"):
-        return apology("must provide id")
-    user_id = request.form.get("id")
-    pwd = generate_password_hash("password")
-    result = db.execute("UPDATE users SET pass= :p WHERE id = :i", p=pwd, i=user_id)
-
-    if not result:
-        return apology("Could not reset pass")
-    else:
-        # Redirect user to home page
-        flash('Password succefully reset to: password')
         return redirect("/users")
 
 

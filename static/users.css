@@ -1,0 +1,13 @@
+.userIdRadio {
+    vertical-align: middle;
+    margin-top: -1px;
+}
+
+.userIdCol {
+    min-width: 60px;
+}
+
+.selected
+{
+    background-color: #eee;
+}

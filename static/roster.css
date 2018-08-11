@@ -23,3 +23,20 @@ table span {
     min-width: 220px;
     background-color: #fff;
 }
+
+.btn-custom {
+    border: 1px solid #ddd;
+}
+
+.btn-custom:hover {
+    background-color: #eee;
+}
+
+@media (max-width: 410px) {
+    #rangeLabel {
+        display: none;
+    }
+    #prevRange {
+        margin-left: auto !important;
+    }
+}

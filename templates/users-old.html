@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+
+{% block scripts %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="/static/request.js"></script>
+    <script src="/static/users-script.js"></script>
+{% endblock %}
+
+{% block title %}
+    Users
+{% endblock %}
+
+{% block main %}
+    <div class="container">
+        <div class="container my-2 text-left">
+            <a class="btn btn-primary mx-1" href="/adduser" role="button">Add User</button></a>
+            <button id="btnEdit" type="button" class="btn btn-secondary mx-1">Edit</button>
+            <!--<button id="btnReset" type="button" class="btn btn-secondary mx-1">Reset Password</button>-->
+            <button id="btnDelete" type="button" class="btn btn-danger mx-1">Delete</button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Real Name</th>
+                        <th>Role</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                        <tr class="user_row">
+                            <td class="userIdCol">
+                                <input class="userIdRadio" type="radio" name="select" value="{{ row["id"] }}">
+                                <label for="select">{{ row["id"] }}</label>
+                            </td>
+                            <td>{{ row["username"] }}</td>
+                            <td>{{ row["email"] }}</td>
+                            <td>{{ row["real_name"] }}</td>
+                            <td>{{ row["role"] }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

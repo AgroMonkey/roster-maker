@@ -1,6 +1,8 @@
 var start_date = null;
 var end_date = null;
 
+const _MS_PER_DAY = 1000 * 60 * 60 * 24;
+
 $(function() {
     start_date = new Date($('#startDate').val());
     end_date = new Date($('#endDate').val());
@@ -44,5 +46,26 @@ $(function() {
         $(this).data('daterangepicker').setEndDate(end_date);
         $('#dateRangePicker').val(moment(start_date).format("DD/MM/YYYY") + " - " + moment(end_date).format("DD/MM/YYYY"));
     });
+    /* Adjust range on prev or next button click */
+    $('#prevRange').on('click', function() {
+        adjustRange(true);
+    });
+    $('#nextRange').on('click', function() {
+        adjustRange();
+    });
 
 });
+
+function adjustRange(reverse=false) {
+    let startDate = new Date($('#startDate').val());
+    let endDate = new Date($('#endDate').val());
+    let range = ((endDate-startDate) / _MS_PER_DAY) + 1;
+    if (reverse) {
+        range = -range;
+    }
+    startDate.setDate(startDate.getDate() + range);
+    endDate.setDate(endDate.getDate() + range);
+    $('#startDate').val(moment(startDate).format('YYYY-MM-DD'));
+    $('#endDate').val(moment(endDate).format('YYYY-MM-DD'));
+    $('#dateRangeForm').submit();
+};

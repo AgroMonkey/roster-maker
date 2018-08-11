@@ -50,4 +50,4 @@ def generateSampleShifts(input_start_date, input_end_date):
                 print(msg)
 
 
-generateSampleShifts("2018-08-06", "2018-08-12")
+generateSampleShifts("2018-08-13", "2019-12-31")

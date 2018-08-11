@@ -31,27 +31,7 @@ main
     text-align: center;
 }
 
-main img
-{
-    /* constrain images on small screens */
-    max-width: 100%;
-}
-
 table
 {
     text-align: left;
-}
-
-.selected
-{
-    background-color: #868e96;
-}
-
-.userIdRadio {
-    vertical-align: middle;
-    margin-top: -1px;
-}
-
-.userIdCol {
-    min-width: 60px;
 }
