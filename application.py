@@ -12,33 +12,51 @@ from helpers import apology, login_required, admin_required, manager_required
 
 # Configure application
 app = Flask(__name__)
-app.config['SQLAlchemy_TRACK_MODIFICATIONS'] = False
-app.config['SQLAlchemy_DATABASE_URI'] = os.environ['DATABASE_URL']
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///roster-test.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+#app.config['SQLAlchemy_DATABASE_URI'] = os.environ['DATABASE_URL']
 db = SQLAlchemy(app)
+
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.string(20), unique=True, nullable=False)
-    email = db.Column(db.string(120), unique=True, nullable=False)
-    password = db.Column(db.string(100), nullable=False)
-    real_name = db.Column(db.string(50), nullable=False)
-    role = db.Column(db.string(20), nullable=False)
-    shifts = db.relationship('Shift', backref='user_id', lazy=True)
+    username = db.Column(db.String(20), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(100), nullable=False)
+    real_name = db.Column(db.String(50), nullable=False)
+    role = db.Column(db.String(20), nullable=False)
+    shifts = db.relationship('Shift', backref='shift_user', lazy=True)
+
+    def __init__(self, username, email, password, real_name, role):
+        self.username = username
+        self.email = email
+        self.password = password
+        self.real_name = real_name
+        self.role = role
 
     def __repr__(self):
-        return f"User({self.username}, '{self.email}', '{self.real_name}', '{self.role}')"
+        return f"User({self.username}, '{self.email}', '{self.real_name}')"
+
 
 class Shift(db.Model):
-    shift_id = db.Column(db.string(20), unique=True, nullable=False)
+    shift_id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.DateTime, nullable = False)
-    start_time = db.Column(db.string(5), nullable=False)
-    end_time = db.Column(db.string(5), nullable=False)
-    sbreak = db.Column(db.string(5), nullable=False)
-    location = db.Column(db.string(50), nullable=False)
+    start_time = db.Column(db.String(5), nullable=False)
+    end_time = db.Column(db.String(5), nullable=False)
+    location = db.Column(db.String(50), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    sbreak = db.Column(db.String(5), default=None)
+
+    def __init__(self, date, start_time, end_time, location, user_id, sbreak=None):
+        self.date = date
+        self.start_time = start_time
+        self.end_time = end_time
+        self.sbreak = sbreak
+        self.location = location
+        self.user_id = user_id
 
     def __repr__(self):
-        return f"User({self.shift_id}, '{self.date}', '{self.location}')"
+        return f"Shift({self.shift_id}, '{self.date}', '{self.location}')"
 
 
 # Ensure templates are auto-reloaded
@@ -60,18 +78,17 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-# Configure CS50 Library to use SQLite database
-db = SQL("sqlite:///roster.db")
-
 
 @app.route("/")
 @login_required
 def index():
     """Shows index screen with next shift and notifications"""
-    shifts = db.execute("SELECT * FROM 'shifts' WHERE user_id = :i AND date >= date('now') ORDER BY date LIMIT 1",
-                        i=session["user_id"])
-    if shifts:
-        shift = shifts[0]
+    tz = timezone('Australia/Sydney')
+    date = datetime.now(tz).date()
+    next_shift = Shift.query.filter(Shift.user_id == session["user_id"], Shift.date >= date).first()
+
+    if next_shift:
+        shift = next_shift.__dict__
         date = datetime.strptime(shift["date"], "%Y-%m-%d")
         shift["datePretty"] = date.strftime("%d/%m/%Y")
         shift["day"] = date.strftime("%A")
@@ -106,10 +123,38 @@ def roster():
         dates[x]["datePretty"] = date.strftime("%d/%m/%Y")
         dates[x]["day"] = date.strftime("%A")
 
-    users = db.execute("SELECT id, real_name FROM 'users' ORDER BY real_name")
-    shifts = db.execute("SELECT shifts.*, users.real_name FROM 'shifts' JOIN 'users' ON shifts.user_id = users.id WHERE (date BETWEEN :s AND :e) ORDER BY start_time",
-                        s=start.strftime("%Y-%m-%d"), e=end.strftime("%Y-%m-%d"))
-    locations = db.execute("SELECT location FROM 'shifts' GROUP BY location")
+    users_query = User.query.order_by(User.real_name).all()
+    if users_query:
+        # Convert result to dict list
+        users = []
+        for user in users_query:
+            data = {}
+            for column in user.__table__.columns:
+                data[column.name] = str(getattr(user, column.name))
+            users.append(data)
+    else:
+        users = None
+
+    locations_query = db.session.query(Shift.location).group_by(Shift.location).all()
+    if locations_query:
+        # Convert result to dict list
+        locations = []
+        for location in locations_query:
+            locations.append({"location": location[0]})
+    else:
+        locations = None
+
+    shifts_query = Shift.query.filter(Shift.date >= start, Shift.date <= end).order_by(Shift.start_time)
+    if shifts_query:
+        # Convert result to dict list
+        shifts = []
+        for shift in shifts_query:
+            data = {}
+            for column in shift.__table__.columns:
+                data[column.name] = str(getattr(shift, column.name))
+            shifts.append(data)
+    else:
+        Shifts = None
 
     return render_template("roster.html", dates=dates, users=users, shifts=shifts, locations=locations)
 
@@ -163,12 +208,11 @@ def updateroster():
         else:
             return apology("Shift Edit Failed")
     else:
-        result = db.execute("INSERT INTO 'shifts' ('user_id', 'date', 'location', 'start_time', 'end_time', 'break') VALUES (:u, :d, :l, :st, :e, :b)",
-                            u=user_id, d=date, l=location, st=start_time, e=end_time, b=sbreak)
-        if result:
-            return redirect(request.referrer)
-        else:
-            return apology("Add Shift Failed")
+        new_shift = Shift(date, start_time, end_time, location, user_id, sbreak)
+        db.session.add(new_shift)
+        db.session.commit()
+
+        return redirect(request.referrer)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -185,22 +229,23 @@ def login():
         if not request.form.get("username"):
             return apology("must provide username")
 
+        username=request.form.get("username")
+
         # Ensure password was submitted
-        elif not request.form.get("password"):
+        if not request.form.get("password"):
             return apology("must provide password")
 
         # Query database for username
-        rows = db.execute("SELECT * FROM users WHERE username = :username",
-                          username=request.form.get("username"))
+        rows = User.query.filter_by(username=username)
 
         # Ensure username exists and password is correct
-        if len(rows) != 1 or not check_password_hash(rows[0]["pass"], request.form.get("password")):
+        if rows.count() != 1 or not check_password_hash(rows[0].password, request.form.get("password")):
             return apology("invalid username and/or password")
 
         # Remember which user has logged in
-        session["user_id"] = rows[0]["id"]
-        session["user_role"] = rows[0]["role"]
-        session["user_real_name"] = rows[0]["real_name"]
+        session["user_id"] = rows[0].id
+        session["user_role"] = rows[0].role
+        session["user_real_name"] = rows[0].real_name
 
         # Redirect user to home page
         return redirect("/")
@@ -270,13 +315,12 @@ def updateuser():
         if not pwd:
             return apology("Missing password info")
         # Adding new user
-        result3 = db.execute("INSERT INTO 'users' ('username', 'pass', 'email', 'real_name', 'role') VALUES (:u, :p, :e, :n, :r)",
-                             u=user, p=pwd, e=email, n=name, r=role)
-        if not result3:
-            return apology("Could not create user")
-        else:
-            flash('User succesfully registered')
-            return redirect("/users")
+        new_user = User(user, email, pwd, name, role)
+        db.session.add(new_user)
+        db.session.commit()
+
+        flash('User succesfully registered')
+        return redirect("/users")
 
 
 @app.route("/changepass", methods=["GET", "POST"])
@@ -299,8 +343,9 @@ def changepass():
         elif not (request.form.get("password") == request.form.get("confirmation")):
             return apology("Password and confirmation don't match")
         # Check if old password matches
-        rows = db.execute("SELECT * FROM users WHERE id = :i", i=session["user_id"])
-        if not check_password_hash(rows[0]["pass"], request.form.get("oldpass")):
+        user = User.query.filter_by(id=session["user_id"]).first()
+
+        if not check_password_hash(user.password, request.form.get("oldpass")):
             return apology("Old password doesn't match")
 
         pwd = generate_password_hash(request.form.get("password"))
@@ -322,7 +367,15 @@ def changepass():
 @admin_required
 def users():
     """Show list of users"""
-    users = db.execute("SELECT * FROM 'users'")
+    users_query = User.query.all()
+    if users_query:
+        # Convert result to dict list
+        users = []
+        for user in users_query:
+            data = {}
+            for column in user.__table__.columns:
+                data[column.name] = str(getattr(user, column.name))
+            users.append(data)
     return render_template("users.html", users=users)
 
 
