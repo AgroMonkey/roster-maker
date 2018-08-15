@@ -35,7 +35,7 @@ class User(db.Model):
         self.role = role
 
     def __repr__(self):
-        return f"User({self.username}, '{self.email}', '{self.real_name}')"
+        return f"User('{self.username}', '{self.email}', '{self.real_name}')"
 
 
 class Shift(db.Model):
@@ -56,7 +56,7 @@ class Shift(db.Model):
         self.user_id = user_id
 
     def __repr__(self):
-        return f"Shift({self.shift_id}, '{self.date}', '{self.location}')"
+        return f"Shift('{self.shift_id}', '{self.date}', '{self.location}')"
 
 
 # Ensure templates are auto-reloaded
