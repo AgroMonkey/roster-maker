@@ -1,4 +1,5 @@
-from cs50 import SQL
+import os
+from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, flash, redirect, render_template, request, session, jsonify
 from flask_session import Session
 from tempfile import mkdtemp
@@ -11,6 +12,34 @@ from helpers import apology, login_required, admin_required, manager_required
 
 # Configure application
 app = Flask(__name__)
+app.config['SQLAlchemy_TRACK_MODIFICATIONS'] = False
+app.config['SQLAlchemy_DATABASE_URI'] = os.environ['DATABASE_URL']
+db = SQLAlchemy(app)
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.string(20), unique=True, nullable=False)
+    email = db.Column(db.string(120), unique=True, nullable=False)
+    password = db.Column(db.string(100), nullable=False)
+    real_name = db.Column(db.string(50), nullable=False)
+    role = db.Column(db.string(20), nullable=False)
+    shifts = db.relationship('Shift', backref='user_id', lazy=True)
+
+    def __repr__(self):
+        return f"User({self.username}, '{self.email}', '{self.real_name}', '{self.role}')"
+
+class Shift(db.Model):
+    shift_id = db.Column(db.string(20), unique=True, nullable=False)
+    date = db.Column(db.DateTime, nullable = False)
+    start_time = db.Column(db.string(5), nullable=False)
+    end_time = db.Column(db.string(5), nullable=False)
+    sbreak = db.Column(db.string(5), nullable=False)
+    location = db.Column(db.string(50), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    def __repr__(self):
+        return f"User({self.shift_id}, '{self.date}', '{self.location}')"
+
 
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
