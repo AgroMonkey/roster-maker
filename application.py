@@ -165,7 +165,8 @@ def deleteshift():
     """Delete shift from roster"""
     shift_id = request.form.get("shift_id")
     print("Deleted Shift ID: " + shift_id)
-    result = db.execute("DELETE FROM shifts WHERE shift_id = :s", s=shift_id)
+    result = True
+    #result = db.execute("DELETE FROM shifts WHERE shift_id = :s", s=shift_id)
     if result:
         flash('Shift Succesfully Deleted')
     else:
@@ -201,12 +202,15 @@ def updateroster():
         sbreak = request.form.get("break")
     if (request.form.get("shift_id")):
         shift_id = request.form.get("shift_id")
-        result = db.execute("UPDATE shifts SET user_id= :u, date= :d, location= :l, start_time= :st, end_time= :e, break= :b WHERE shift_id = :si",
-                            u=user_id, d=date, l=location, st=start_time, e=end_time, b=sbreak, si=shift_id)
-        if result:
-            return redirect(request.referrer)
-        else:
-            return apology("Shift Edit Failed")
+        shift = Shift.query.get(shift_id)
+        shift.user_id = user_id
+        shift.date = date
+        shift.location = location
+        shift.start_time = start_time
+        shift.end_time = end_time
+        shift.sbreak = sbreak
+        db.session.commit()
+
     else:
         new_shift = Shift(date, start_time, end_time, location, user_id, sbreak)
         db.session.add(new_shift)
@@ -292,7 +296,7 @@ def updateuser():
             return apology("Password and confirmation don't match")
         pwd = generate_password_hash(request.form.get("password"))
 
-    user = request.form.get("username")
+    username = request.form.get("username")
     email = request.form.get("email")
     name = request.form.get("real_name")
     role = request.form.get("role")
@@ -300,15 +304,18 @@ def updateuser():
     if request.form.get("user_id"):
         user_id = request.form.get("user_id")
         # Editing existing user
-        result = db.execute("UPDATE users SET username= :u, email= :e, real_name= :n, role= :r WHERE id = :i",
-                            u=user, e=email, n=name, r=role, i=user_id)
-        if not result:
-            return apology("Could not edit user")
+        user = User.query.get(user_id)
+        user.username = username
+        user.email = email
+        user.real_name = real_name
+        user.role = role
+        db.session.commit()
+
         if request.form.get("changePass"):
             # If password changing
-            result2 = db.execute("UPDATE users SET pass= :p WHERE id = :i", p=pwd, i=user_id)
-            if not result2:
-                return apology("Could not change pass")
+            user.password = pwd
+            db.session.commit()
+
         flash('User succesfully modified')
         return redirect("/users")
     else:
@@ -349,14 +356,11 @@ def changepass():
             return apology("Old password doesn't match")
 
         pwd = generate_password_hash(request.form.get("password"))
-        result = db.execute("UPDATE users SET pass= :p WHERE id = :i", p=pwd, i=session["user_id"])
+        user.password = pwd
+        db.session.commit()
 
-        if not result:
-            return apology("Could not change pass")
-        else:
-            # Redirect user to home page
-            flash('Password succefully changed')
-            return redirect("/")
+        flash('Password succefully changed')
+        return redirect("/")
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
@@ -386,7 +390,8 @@ def delete_user():
     if not request.form.get("id"):
         return apology("must provide id")
     user_id = request.form.get("id")
-    result = db.execute("DELETE FROM 'users' WHERE id = :i", i=user_id)
+    result = True
+    #result = db.execute("DELETE FROM 'users' WHERE id = :i", i=user_id)
     if not result:
         return apology("Could not delete user")
     else:
