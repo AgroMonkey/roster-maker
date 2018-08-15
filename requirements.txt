@@ -1,8 +1,4 @@
-cs50
 Flask
 Flask-Session
-tempfile
-werkzeug.exceptions
-werkzeug.security
 datetime
 pytz
