@@ -89,7 +89,7 @@ def index():
 
     if next_shift:
         shift = next_shift.__dict__
-        date = datetime.strptime(shift["date"], "%Y-%m-%d")
+        date = shift["date"]
         shift["datePretty"] = date.strftime("%d/%m/%Y")
         shift["day"] = date.strftime("%A")
     else:
@@ -144,7 +144,7 @@ def roster():
     else:
         locations = None
 
-    shifts_query = Shift.query.filter(Shift.date >= start, Shift.date <= end).order_by(Shift.start_time)
+    shifts_query = Shift.query.filter(Shift.date >= start, Shift.date <= end).order_by(Shift.start_time).all()
     if shifts_query:
         # Convert result to dict list
         shifts = []
@@ -322,7 +322,7 @@ def updateuser():
         if not pwd:
             return apology("Missing password info")
         # Adding new user
-        new_user = User(user, email, pwd, name, role)
+        new_user = User(username, email, pwd, name, role)
         db.session.add(new_user)
         db.session.commit()
 
