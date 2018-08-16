@@ -13,7 +13,7 @@ from helpers import apology, login_required, admin_required, manager_required
 # Configure application
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLAlchemy_DATABASE_URI'] = os.environ['DATABASE_URL']
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///roster-test.db'
 db = SQLAlchemy(app)
 
