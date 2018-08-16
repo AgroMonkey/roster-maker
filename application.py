@@ -133,7 +133,7 @@ def roster():
                 data[column.name] = str(getattr(user, column.name))
             users.append(data)
     else:
-        users = None
+        users = []
 
     locations_query = db.session.query(Shift.location).group_by(Shift.location).all()
     if locations_query:
@@ -142,7 +142,7 @@ def roster():
         for location in locations_query:
             locations.append({"location": location[0]})
     else:
-        locations = None
+        locations = []
 
     shifts_query = Shift.query.filter(Shift.date >= start, Shift.date <= end).order_by(Shift.start_time).all()
     if shifts_query:
@@ -152,9 +152,11 @@ def roster():
             data = {}
             for column in shift.__table__.columns:
                 data[column.name] = str(getattr(shift, column.name))
+            data["date"] = shift.date.strftime("%Y-%m-%d")
+            data["real_name"] = shift.shift_user.real_name
             shifts.append(data)
     else:
-        Shifts = None
+        shifts = []
 
     return render_template("roster.html", dates=dates, users=users, shifts=shifts, locations=locations)
 
@@ -164,9 +166,8 @@ def roster():
 def deleteshift():
     """Delete shift from roster"""
     shift_id = request.form.get("shift_id")
-    print("Deleted Shift ID: " + shift_id)
-    result = True
-    #result = db.execute("DELETE FROM shifts WHERE shift_id = :s", s=shift_id)
+    result = Shift.query.filter_by(shift_id=shift_id).delete()
+    db.session.commit()
     if result:
         flash('Shift Succesfully Deleted')
     else:
@@ -204,12 +205,14 @@ def updateroster():
         shift_id = request.form.get("shift_id")
         shift = Shift.query.get(shift_id)
         shift.user_id = user_id
-        shift.date = date
+        shift.date = datetime.strptime(date, "%Y-%m-%d")
         shift.location = location
         shift.start_time = start_time
         shift.end_time = end_time
         shift.sbreak = sbreak
         db.session.commit()
+
+        return redirect(request.referrer)
 
     else:
         new_shift = Shift(date, start_time, end_time, location, user_id, sbreak)
@@ -390,8 +393,8 @@ def delete_user():
     if not request.form.get("id"):
         return apology("must provide id")
     user_id = request.form.get("id")
-    result = True
-    #result = db.execute("DELETE FROM 'users' WHERE id = :i", i=user_id)
+    result = User.query.filter_by(id=user_id).delete()
+    db.session.commit()
     if not result:
         return apology("Could not delete user")
     else:
