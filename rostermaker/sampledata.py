@@ -1,4 +1,4 @@
-from application import db, User, Shift
+from rostermaker import db, User, Shift
 from datetime import datetime, timedelta
 from werkzeug.security import check_password_hash, generate_password_hash
 import random
